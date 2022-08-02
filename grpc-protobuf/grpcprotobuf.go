@@ -21,7 +21,9 @@ func Start() {
 }
 
 // Server type
-type Server struct{}
+type Server struct{
+	proto.UnimplementedAPIServer
+}
 
 // CreateUser handler
 func (s *Server) CreateUser(ctx context.Context, in *proto.User) (*proto.Response, error) {

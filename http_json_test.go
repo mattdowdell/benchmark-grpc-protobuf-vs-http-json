@@ -16,11 +16,11 @@ func init() {
 }
 
 func BenchmarkHTTPJSON(b *testing.B) {
-	client := &http.Client{}
-
-	for n := 0; n < b.N; n++ {
-		doPost(client, b)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			doPost(http.DefaultClient, b)
+		}
+	})
 }
 
 func doPost(client *http.Client, b *testing.B) {

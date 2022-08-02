@@ -1,6 +1,7 @@
 package benchmarks
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -10,22 +11,26 @@ import (
 	g "google.golang.org/grpc"
 )
 
+var grpcClient proto.APIClient
+
 func init() {
 	go grpcprotobuf.Start()
 	time.Sleep(time.Second)
+
+	conn, err := g.Dial("127.0.0.1:60000", g.WithInsecure())
+	if err != nil {
+		log.Fatalf("grpc connection failed: %v", err)
+	}
+
+	grpcClient = proto.NewAPIClient(conn)
 }
 
 func BenchmarkGRPCProtobuf(b *testing.B) {
-	conn, err := g.Dial("127.0.0.1:60000", g.WithInsecure())
-	if err != nil {
-		b.Fatalf("grpc connection failed: %v", err)
-	}
-
-	client := proto.NewAPIClient(conn)
-
-	for n := 0; n < b.N; n++ {
-		doGRPC(client, b)
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			doGRPC(grpcClient, b)
+		}
+	})
 }
 
 func doGRPC(client proto.APIClient, b *testing.B) {
